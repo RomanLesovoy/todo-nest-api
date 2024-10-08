@@ -1,20 +1,33 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { TodoService } from './todo.service';
-import { CreateTodoDto } from './dto/create-todo.dto';
-import { UpdateTodoDto } from './dto/update-todo.dto';
+import { TodoService } from '../services/todo.service';
+import { CreateColumnDto, CreateRoomDto, CreateTodoDto } from '../dto/create-todo.dto';
+import { UpdateTodoDto } from '../dto/update-todo.dto';
 
 @Controller('todo')
 export class TodoController {
   constructor(private readonly todoService: TodoService) {}
 
   @Post()
-  create(@Body() createTodoDto: CreateTodoDto) {
-    return this.todoService.create(createTodoDto);
+  async create(@Body() createTodoDto: CreateTodoDto) {
+    try {
+      const todo = await this.todoService.create(createTodoDto);
+
+      return {
+        success: true,
+        message: 'Task created!',
+        todo,
+      }
+    } catch (e) {
+      return {
+        success: false,
+        message: e.message,
+      }
+    }
   }
 
   @Get()
   findAll() {
-    return this.todoService.findAll();
+    return this.todoService.findAllTodos();
   }
 
   @Get(':id')

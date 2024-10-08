@@ -6,7 +6,9 @@ import { TodoModule } from './todo/todo.module';
 import * as ormConfig from '../ormconfig.json';
 
 @Module({
-  imports: [TypeOrmModule.forRoot(ormConfig as any), TodoModule],
+  imports: [TypeOrmModule.forRoot({
+    ...ormConfig,
+  } as any), TodoModule],
   controllers: [AppController],
   providers: [AppService],
 })

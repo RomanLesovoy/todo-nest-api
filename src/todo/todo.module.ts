@@ -1,12 +1,20 @@
 import { Module } from '@nestjs/common';
-import { TodoService } from './todo.service';
-import { TodoController } from './todo.controller';
+import { TodoService } from './services/todo.service';
+import { ColumnService } from './services/column.service';
+import { RoomService } from './services/room.service';
+import { TodoController } from './controllers/todo.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Todo } from './entities/todo.entity';
+import { Todo as TodoEntity } from './entities/todo.entity';
+import { Room as RoomEntity } from './entities/room.entity';
+import { Column as ColumnEntity } from './entities/column.entity';
+import { RoomController } from './controllers/room.controller';
+import { ColumnController } from './controllers/column.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Todo])],
-  controllers: [TodoController],
-  providers: [TodoService],
+  imports: [TypeOrmModule.forFeature(
+    [RoomEntity, TodoEntity, ColumnEntity]
+  )],
+  controllers: [TodoController, RoomController, ColumnController],
+  providers: [TodoService, ColumnService, RoomService],
 })
 export class TodoModule {}
