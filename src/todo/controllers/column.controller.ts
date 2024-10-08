@@ -9,20 +9,19 @@ export class ColumnController {
 
   @Post()
   async create(@Body() createTodoDto: CreateColumnDto) {
-    try {
-      const todo = await this.columnService.createColumn(createTodoDto);
-
-      return {
-        success: true,
-        message: 'Column created!',
-        todo,
-      }
-    } catch (e) {
-      return {
-        success: false,
-        message: e.message,
-      }
-    }
+    return new Promise((res, rej) => {
+      this.columnService.createColumn$(createTodoDto).subscribe({
+        next: (column) => res({
+          success: true,
+          message: 'Column created!',
+          column: column,
+        }),
+        error: (e) => rej({
+          success: false,
+          message: e.message,
+        }),
+      })
+    })
   }
 
   @Patch(':id')

@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Column as ColumnEntity } from '../entities/column.entity';
 import { Room as RoomEntity } from '../entities/room.entity';
 import { UpdateColumnDto } from '../dto/update-todo.dto';
+import { from, map, Observable, of, switchMap, tap } from 'rxjs';
 
 @Injectable()
 export class ColumnService {
@@ -27,6 +28,20 @@ export class ColumnService {
       roomId: room.id,
     });
     return this.columnRepository.save(column);
+  }
+
+  createColumn$(createColumnDto: CreateColumnDto): Observable<ColumnEntity | Error> {
+    return from(this.roomRepository.findOneByOrFail({ hash: createColumnDto.roomHash }))
+      .pipe(
+        switchMap((room) => of(
+          this.columnRepository.create({
+            name: createColumnDto.name,
+            roomId: room.id,
+          }),
+        )),
+        switchMap((column) => from(this.columnRepository.save(column))),
+        map((v: ColumnEntity) => v)
+      )
   }
 
   async remove(id: number) {
