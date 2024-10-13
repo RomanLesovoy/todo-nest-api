@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Column as ColumnEntity } from '../entities/column.entity';
 import { Room as RoomEntity } from '../entities/room.entity';
 import { UpdateColumnDto } from '../dto/update-todo.dto';
-import { from, map, Observable, of, switchMap, tap } from 'rxjs';
+import { from, map, Observable, of, switchMap, throwError } from 'rxjs';
 
 @Injectable()
 export class ColumnService {
@@ -31,26 +31,30 @@ export class ColumnService {
   }
 
   createColumn$(createColumnDto: CreateColumnDto): Observable<ColumnEntity | Error> {
-    return from(this.roomRepository.findOneByOrFail({ hash: createColumnDto.roomHash }))
+    return from(this.roomRepository.findOneBy({ hash: createColumnDto.roomHash }))
       .pipe(
-        switchMap((room) => of(
+        switchMap((room) => room ? of(
           this.columnRepository.create({
             name: createColumnDto.name,
             roomId: room.id,
           }),
-        )),
+        ) : throwError(() => new Error('room not exists'))),
         switchMap((column) => from(this.columnRepository.save(column))),
         map((v: ColumnEntity) => v)
       )
   }
 
-  async remove(id: number) {
-    const todo = await this.columnRepository.findOneBy({ id });
-    await this.columnRepository.remove(todo);
+  remove(id: number): Observable<ColumnEntity> {
+    return from(this.columnRepository.findOneBy({ id })).pipe(
+      switchMap((col) => from(this.columnRepository.remove(col))),
+      map((v: ColumnEntity) => v)
+    )
   }
 
-  async update(id: number, updateColumnDto: UpdateColumnDto) {
-    const todo = await this.columnRepository.findOneBy({ id });
-    return await this.columnRepository.save({ ...todo, ...updateColumnDto })
+  update(id: number, updateColumnDto: UpdateColumnDto): Observable<ColumnEntity> {
+    return from(this.columnRepository.findOneBy({ id })).pipe(
+      switchMap((col) => from(this.columnRepository.save({ ...col, ...updateColumnDto }))),
+      map((v: ColumnEntity) => v)
+    )
   }
 }

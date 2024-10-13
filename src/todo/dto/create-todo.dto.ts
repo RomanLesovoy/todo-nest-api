@@ -35,8 +35,4 @@ export class CreateRoomDto {
   @IsNotEmpty()
   @IsString()
   name: string;
-
-  @IsNotEmpty()
-  @IsString()
-  hash: string;
 }

@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { TodoService } from '../services/todo.service';
-import { CreateColumnDto, CreateRoomDto, CreateTodoDto } from '../dto/create-todo.dto';
+import { CreateTodoDto } from '../dto/create-todo.dto';
 import { UpdateTodoDto } from '../dto/update-todo.dto';
 
 @Controller('todo')
@@ -20,15 +20,16 @@ export class TodoController {
     } catch (e) {
       return {
         success: false,
+        status: 500,
         message: e.message,
       }
     }
   }
 
-  @Get()
-  findAll() {
-    return this.todoService.findAllTodos();
-  }
+  // @Get()
+  // findAll() {
+  //   return this.todoService.findAllTodos();
+  // }
 
   @Get(':id')
   findOne(@Param('id') id: string) {

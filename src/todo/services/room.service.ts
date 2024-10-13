@@ -4,6 +4,7 @@ import { CreateRoomDto } from '../dto/create-todo.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Room as RoomEntity } from '../entities/room.entity';
 import { UpdateRoomDto } from '../dto/update-todo.dto';
+import { from, map, Observable, of, switchMap } from 'rxjs';
 
 @Injectable()
 export class RoomService {
@@ -13,21 +14,26 @@ export class RoomService {
   ) {}
 
   async findByRoom(hash: string) {
-    const todos = await this.roomRepository.find({
+    const todo = await this.roomRepository.findOneOrFail({
       where: {
-        hash
+        hash,
       },
       relations: {
-        todos: true,
         columns: true,
+        todos: true,
       }
     });
-    return todos;
+    return todo;
   }
 
-  async createRoom(createRoomDto: CreateRoomDto): Promise<RoomEntity> {
-    const room = await this.roomRepository.create(createRoomDto);
-    return this.roomRepository.save(room);
+  createRoom(createRoomDto: CreateRoomDto): Observable<RoomEntity> {
+    const roomHash = (Math.random() + 1).toString(36).substring(2);
+
+    return of(this.roomRepository.create({ ...createRoomDto, hash: roomHash }))
+      .pipe(
+        switchMap((v) => from(this.roomRepository.save(v))),
+        map(v => v)
+      )
   }
 
   async remove(id: number) {

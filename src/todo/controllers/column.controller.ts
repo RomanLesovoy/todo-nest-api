@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { ColumnService } from '../services/column.service';
 import { CreateColumnDto } from '../dto/create-todo.dto';
 import { UpdateColumnDto } from '../dto/update-todo.dto';
@@ -19,6 +19,7 @@ export class ColumnController {
         error: (e) => rej({
           success: false,
           message: e.message,
+          status: 500,
         }),
       })
     })
@@ -26,11 +27,36 @@ export class ColumnController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateColumnDto: UpdateColumnDto) {
-    return this.columnService.update(+id, updateColumnDto);
+    return new Promise((res, rej) => {
+      this.columnService.update(+id, updateColumnDto).subscribe({
+        next: (col) => res({
+          success: true,
+          message: 'Column updated!',
+          column: col,
+        }),
+        error: (e) => rej({
+          success: false,
+          message: e.message,
+          status: 500,
+        })
+      })
+    });
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.columnService.remove(+id);
+    return new Promise((res, rej) => {
+      this.columnService.remove(+id).subscribe({
+        next: () => res({
+          success: true,
+          message: 'Column deleted!',
+        }),
+        error: (e) => rej({
+          success: false,
+          message: e.message,
+          status: 500,
+        })
+      })
+    });
   }
 }
