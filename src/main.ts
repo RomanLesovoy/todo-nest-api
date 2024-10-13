@@ -25,6 +25,6 @@ async function bootstrap() {
       transformerPackage: require('@nestjs/class-transformer')
     }
   ));
-  await app.listen(3000);
+  await app.listen(10000);
 }
 bootstrap();
