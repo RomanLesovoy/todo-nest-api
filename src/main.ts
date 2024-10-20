@@ -27,6 +27,9 @@ async function bootstrap() {
       transformerPackage: require('@nestjs/class-transformer')
     }
   ));
-  await app.listen(10000);
+
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
+  await app.listen(isDevelopment ? 3000 : 10000);
 }
 bootstrap();
