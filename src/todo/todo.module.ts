@@ -9,12 +9,12 @@ import { Room as RoomEntity } from './entities/room.entity';
 import { Column as ColumnEntity } from './entities/column.entity';
 import { RoomController } from './controllers/room.controller';
 import { ColumnController } from './controllers/column.controller';
-
+import { RoomGateway } from './room.gateway';
 @Module({
   imports: [TypeOrmModule.forFeature(
     [RoomEntity, TodoEntity, ColumnEntity]
   )],
   controllers: [TodoController, RoomController, ColumnController],
-  providers: [TodoService, ColumnService, RoomService],
+  providers: [TodoService, ColumnService, RoomService, RoomGateway],
 })
 export class TodoModule {}

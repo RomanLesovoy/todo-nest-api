@@ -5,7 +5,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Column as ColumnEntity } from '../entities/column.entity';
 import { Room as RoomEntity } from '../entities/room.entity';
 import { UpdateColumnDto } from '../dto/update-todo.dto';
-import { from, map, Observable, of, switchMap, throwError } from 'rxjs';
+import { from, map, tap, Observable, of, switchMap, throwError } from 'rxjs';
+import { RoomGateway } from '../room.gateway';
 
 @Injectable()
 export class ColumnService {
@@ -14,6 +15,7 @@ export class ColumnService {
     private readonly roomRepository: Repository<RoomEntity>,
     @InjectRepository(ColumnEntity)
     private readonly columnRepository: Repository<ColumnEntity>,
+    private readonly roomGateway: RoomGateway,
   ) {}
 
   async createColumn(createColumnDto: CreateColumnDto): Promise<ColumnEntity | Error> {
@@ -27,6 +29,7 @@ export class ColumnService {
       name: createColumnDto.name,
       roomId: room.id,
     });
+    this.wsColumn(column, 'add');
     return this.columnRepository.save(column);
   }
 
@@ -40,6 +43,7 @@ export class ColumnService {
           }),
         ) : throwError(() => new Error('room not exists'))),
         switchMap((column) => from(this.columnRepository.save(column))),
+        tap((column) => this.wsColumn(column, 'add')),
         map((v: ColumnEntity) => v)
       )
   }
@@ -47,6 +51,7 @@ export class ColumnService {
   remove(id: number): Observable<ColumnEntity> {
     return from(this.columnRepository.findOneBy({ id })).pipe(
       switchMap((col) => from(this.columnRepository.remove(col))),
+      tap((column) => this.wsColumn(column, 'remove')),
       map((v: ColumnEntity) => v)
     )
   }
@@ -54,7 +59,18 @@ export class ColumnService {
   update(id: number, updateColumnDto: UpdateColumnDto): Observable<ColumnEntity> {
     return from(this.columnRepository.findOneBy({ id })).pipe(
       switchMap((col) => from(this.columnRepository.save({ ...col, ...updateColumnDto }))),
+      tap((column) => this.wsColumn(column, 'update')),
       map((v: ColumnEntity) => v)
     )
+  }
+
+  wsColumn(column: ColumnEntity, action: 'add' | 'remove' | 'update') {
+    const roomHash = column.room.hash;
+    this.roomGateway.server.to(roomHash).emit('roomUpdate', {
+      action,
+      type: 'column',
+      value: column,
+      roomHash,
+    });
   }
 }
