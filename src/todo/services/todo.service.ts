@@ -37,9 +37,10 @@ export class TodoService {
       roomId: room.id,
       title: createTodoDto.title,
     });
+    const saved = await this.todoRepository.save(todo);
     
-    this.wsTodo(todo, 'add');
-    return this.todoRepository.save(todo);
+    this.wsTodo({ ...saved, room }, 'create');
+    return saved;
   }
 
   async findAllTodos(): Promise<TodoEntity[]> {
@@ -47,24 +48,29 @@ export class TodoService {
     return todos;
   }
 
+  private findOneWithRoom(id: number) {
+    return this.todoRepository.findOne({ where: { id }, relations: { room: true } })
+  }
+
   async findOne(id: number): Promise<TodoEntity | null> {
-    const todo = await this.todoRepository.findOneBy({ id });
+    const todo = await this.findOneWithRoom(id);
     return todo;
   }
 
   async update(id: number, updateTodoDto: UpdateTodoDto) {
-    const todo = await this.todoRepository.findOneBy({ id });
-    this.wsTodo(todo, 'update');
-    return await this.todoRepository.save({ ...todo, ...updateTodoDto })
+    const todo = await this.findOneWithRoom(id);
+    const result = await this.todoRepository.save({ ...todo, ...updateTodoDto });
+    this.wsTodo(result, 'update');
+    return result;
   }
 
   async remove(id: number) {
-    const todo = await this.todoRepository.findOneBy({ id });
-    this.wsTodo(todo, 'remove');
+    const todo = await this.findOneWithRoom(id);
+    this.wsTodo(todo, 'delete');
     await this.todoRepository.remove(todo);
   }
 
-  wsTodo(todo: TodoEntity, action: 'add' | 'remove' | 'update') {
+  wsTodo(todo: TodoEntity, action: 'create' | 'delete' | 'update') {
     const roomHash = todo.room.hash;
     this.roomGateway.server.to(roomHash).emit('roomUpdate', {
       action,

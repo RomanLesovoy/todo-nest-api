@@ -1,42 +1,33 @@
-import { SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
+import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
-// import { Column } from "./entities/column.entity";
-// import { Todo } from "./entities/todo.entity";
 
-interface JoinRoomPayload {
-  roomHash: string;
-}
-
-// interface RoomUpdatePayload {
-//   message: string;
-//   action: 'add' | 'remove' | 'update';
-//   type: 'column' | 'todo';
-//   value: Column | Todo;
-//   roomHash: string;
-// }
-
-@WebSocketGateway(10000, { cors: true })
+@WebSocketGateway(Number(process.env.PORT), {
+  namespace: '/api/v1',
+  transports: ['websocket', 'polling'],
+  cors: true,
+  // path: '/todo'
+})
 export class RoomGateway {
-  @WebSocketServer()
-  server: Server;
+  @WebSocketServer() server: Server;
+
+  afterInit(server: Server) {
+    console.log('WebSocket initialized');
+  }
 
   @SubscribeMessage('joinRoom')
-  handleJoinRoom(client: Socket, payload: JoinRoomPayload): void {
-    console.log('Client joined room:', payload);
-    client.join(payload.roomHash);
-    client.emit('joinedRoom', { roomHash: payload.roomHash });
+  handleJoinRoom(@MessageBody() room: string, @ConnectedSocket() client: Socket) {
+    client.rooms.forEach((room) => client.leave(room));
+    client.join(room);
+
+    console.log(`Client ${client.id} joined to room ${room}`);
+    return { success: true, message: `Joined to room ${room}` };
   }
 
-  @SubscribeMessage('leaveRoom')
-  handleLeaveRoom(client: Socket, payload: JoinRoomPayload): void {
-    console.log('Client left room:', payload);
-    client.leave(payload.roomHash);
-    client.emit('leftRoom', { roomHash: payload.roomHash });
+  handleConnection(client: Socket, ...args: any[]) {
+    console.log(`Client connected: ${client.id}`);
   }
 
-  // @SubscribeMessage('sendMessage')
-  // handleSendMessage(_: Socket, payload: RoomUpdatePayload): void {
-  //   console.log('Message sent:', payload);
-  //   this.server.to(payload.roomHash).emit('roomUpdate', payload);
-  // }
+  handleDisconnect(client: Socket) {
+    console.log(`Client disconnected: ${client.id}`);
+  }
 }

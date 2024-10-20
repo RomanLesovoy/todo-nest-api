@@ -18,19 +18,8 @@ export class ColumnService {
     private readonly roomGateway: RoomGateway,
   ) {}
 
-  async createColumn(createColumnDto: CreateColumnDto): Promise<ColumnEntity | Error> {
-    const room = await this.roomRepository.findOneBy({ hash: createColumnDto.roomHash });
-
-    if (!room) {
-      throw new Error('room not exists');
-    }
-
-    const column = await this.columnRepository.create({
-      name: createColumnDto.name,
-      roomId: room.id,
-    });
-    this.wsColumn(column, 'add');
-    return this.columnRepository.save(column);
+  private _findOneWithRoom(id: number) {
+    return this.columnRepository.findOne({ where: { id }, relations: { room: true } })
   }
 
   createColumn$(createColumnDto: CreateColumnDto): Observable<ColumnEntity | Error> {
@@ -42,29 +31,30 @@ export class ColumnService {
             roomId: room.id,
           }),
         ) : throwError(() => new Error('room not exists'))),
-        switchMap((column) => from(this.columnRepository.save(column))),
-        tap((column) => this.wsColumn(column, 'add')),
+        switchMap((column) => this.columnRepository.save(column)),
+        switchMap((column) => from(this._findOneWithRoom(column.id))),
+        tap((column) => this.wsColumn(column, 'create')),
         map((v: ColumnEntity) => v)
       )
   }
 
   remove(id: number): Observable<ColumnEntity> {
-    return from(this.columnRepository.findOneBy({ id })).pipe(
-      switchMap((col) => from(this.columnRepository.remove(col))),
-      tap((column) => this.wsColumn(column, 'remove')),
+    return from(this._findOneWithRoom(id)).pipe(
+      tap((col) => this.columnRepository.remove(col)),
+      tap((column) => this.wsColumn(column, 'delete')),
       map((v: ColumnEntity) => v)
     )
   }
 
   update(id: number, updateColumnDto: UpdateColumnDto): Observable<ColumnEntity> {
-    return from(this.columnRepository.findOneBy({ id })).pipe(
+    return from(this._findOneWithRoom(id)).pipe(
       switchMap((col) => from(this.columnRepository.save({ ...col, ...updateColumnDto }))),
       tap((column) => this.wsColumn(column, 'update')),
       map((v: ColumnEntity) => v)
     )
   }
 
-  wsColumn(column: ColumnEntity, action: 'add' | 'remove' | 'update') {
+  wsColumn(column: ColumnEntity, action: 'create' | 'delete' | 'update') {
     const roomHash = column.room.hash;
     this.roomGateway.server.to(roomHash).emit('roomUpdate', {
       action,

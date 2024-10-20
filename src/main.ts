@@ -1,19 +1,23 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
   app.setGlobalPrefix('api/v1');
+  
+  const isDevelopment = process.env.NODE_ENV === 'development';
 
-  const whitelist = ['https://tickets-board-v1.firebaseapp.com', 'http://tickets-board-v1.firebaseapp.com/'];
+  const whitelist = isDevelopment ? ['http://localhost:4200'] : ['https://tickets-board-v1.firebaseapp.com', 'http://tickets-board-v1.firebaseapp.com/'];
+
   app.enableCors({
     origin: function (origin, callback) {
       if (whitelist.indexOf(origin) !== -1) {
-        console.log("Allowed cors for:", origin)
+        // console.log("Allowed cors for:", origin)
         callback(null, true)
       } else {
-        console.log("Blocked cors for:", origin)
+        console.error("Blocked cors for:", origin)
         callback(new Error('Not allowed by CORS'))
       }
     },
@@ -28,8 +32,8 @@ async function bootstrap() {
     }
   ));
 
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  // app.useWebSocketAdapter(new IoAdapter(app));
 
-  await app.listen(isDevelopment ? 3000 : 10000);
+  await app.listen(process.env.PORT);
 }
 bootstrap();
