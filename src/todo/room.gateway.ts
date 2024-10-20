@@ -1,19 +1,19 @@
 import { SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
-import { Column } from "./entities/column.entity";
-import { Todo } from "./entities/todo.entity";
+// import { Column } from "./entities/column.entity";
+// import { Todo } from "./entities/todo.entity";
 
 interface JoinRoomPayload {
   roomHash: string;
 }
 
-interface RoomUpdatePayload {
-  message: string;
-  action: 'add' | 'remove' | 'update';
-  type: 'column' | 'todo';
-  value: Column | Todo;
-  roomHash: string;
-}
+// interface RoomUpdatePayload {
+//   message: string;
+//   action: 'add' | 'remove' | 'update';
+//   type: 'column' | 'todo';
+//   value: Column | Todo;
+//   roomHash: string;
+// }
 
 @WebSocketGateway(10000, { cors: true })
 export class RoomGateway {
@@ -34,9 +34,9 @@ export class RoomGateway {
     client.emit('leftRoom', { roomHash: payload.roomHash });
   }
 
-  @SubscribeMessage('sendMessage')
-  handleSendMessage(_: Socket, payload: RoomUpdatePayload): void {
-    console.log('Message sent:', payload);
-    this.server.to(payload.roomHash).emit('roomUpdate', payload);
-  }
+  // @SubscribeMessage('sendMessage')
+  // handleSendMessage(_: Socket, payload: RoomUpdatePayload): void {
+  //   console.log('Message sent:', payload);
+  //   this.server.to(payload.roomHash).emit('roomUpdate', payload);
+  // }
 }
