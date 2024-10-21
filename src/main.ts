@@ -24,7 +24,8 @@ async function bootstrap() {
   });
 
   const ioAdapter = new IoAdapter(app);
-  ioAdapter.createIOServer(Number(process.env.PORT), {
+
+  const socketIoOptions = {
     cors: true,
     transports: ['websocket', 'polling'],
     pingTimeout: 60000,
@@ -34,8 +35,8 @@ async function bootstrap() {
     allowEIO3: true,
     allowUpgrades: true,
     httpCompression: true,
-  });
-
+  };
+  (app.getHttpAdapter().getInstance() as any).options = socketIoOptions;
   app.useWebSocketAdapter(ioAdapter);
 
   app.useGlobalPipes(new ValidationPipe(

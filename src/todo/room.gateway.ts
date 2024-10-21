@@ -2,7 +2,6 @@ import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSo
 import { Server, Socket } from "socket.io";
 
 @WebSocketGateway({
-  namespace: '/api/v1',
   transports: ['websocket', 'polling'],
   cors: true,
   // path: '/todo'
