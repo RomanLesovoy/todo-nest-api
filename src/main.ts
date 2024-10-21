@@ -9,7 +9,7 @@ async function bootstrap() {
   
   const isDevelopment = process.env.NODE_ENV === 'development';
 
-  const whitelist = isDevelopment ? ['http://localhost:4200'] : ['https://tickets-board-v1.firebaseapp.com', 'http://tickets-board-v1.firebaseapp.com/'];
+  const whitelist = isDevelopment ? ['http://localhost:4200'] : ['https://tickets-board-v1.firebaseapp.com', 'http://tickets-board-v1.firebaseapp.com'];
 
   app.enableCors({
     origin: function (origin, callback) {
@@ -25,18 +25,18 @@ async function bootstrap() {
 
   const ioAdapter = new IoAdapter(app);
 
-  const socketIoOptions = {
-    cors: true,
-    transports: ['websocket', 'polling'],
-    pingTimeout: 60000,
-    pingInterval: 25000,
-    cookie: false,
-    serveClient: false,
-    allowEIO3: true,
-    allowUpgrades: true,
-    httpCompression: true,
-  };
-  (app.getHttpAdapter().getInstance() as any).options = socketIoOptions;
+  // const socketIoOptions = {
+  //   cors: true,
+  //   transports: ['websocket', 'polling'],
+  //   pingTimeout: 60000,
+  //   pingInterval: 25000,
+  //   cookie: false,
+  //   serveClient: false,
+  //   allowEIO3: true,
+  //   allowUpgrades: true,
+  //   httpCompression: true,
+  // };
+  // (app.getHttpAdapter().getInstance() as any).options = socketIoOptions;
   app.useWebSocketAdapter(ioAdapter);
 
   app.useGlobalPipes(new ValidationPipe(
@@ -46,8 +46,6 @@ async function bootstrap() {
       transformerPackage: require('@nestjs/class-transformer')
     }
   ));
-
-  // app.useWebSocketAdapter(new IoAdapter(app));
 
   await app.listen(process.env.PORT);
 }
