@@ -14,7 +14,6 @@ async function bootstrap() {
   app.enableCors({
     origin: function (origin, callback) {
       if (whitelist.indexOf(origin) !== -1) {
-        // console.log("Allowed cors for:", origin)
         callback(null, true)
       } else {
         console.error("Blocked cors for:", origin)
@@ -23,6 +22,21 @@ async function bootstrap() {
     },
     allowedHeaders:"*",
   });
+
+  const ioAdapter = new IoAdapter(app);
+  ioAdapter.createIOServer(Number(process.env.PORT), {
+    cors: true,
+    transports: ['websocket', 'polling'],
+    pingTimeout: 60000,
+    pingInterval: 25000,
+    cookie: false,
+    serveClient: false,
+    allowEIO3: true,
+    allowUpgrades: true,
+    httpCompression: true,
+  });
+
+  app.useWebSocketAdapter(ioAdapter);
 
   app.useGlobalPipes(new ValidationPipe(
     {

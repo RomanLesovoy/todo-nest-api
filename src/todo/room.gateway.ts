@@ -1,7 +1,7 @@
 import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 
-@WebSocketGateway(Number(process.env.PORT), {
+@WebSocketGateway({
   namespace: '/api/v1',
   transports: ['websocket', 'polling'],
   cors: true,
