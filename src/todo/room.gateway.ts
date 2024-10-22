@@ -4,6 +4,7 @@ import { Server, Socket } from "socket.io";
 @WebSocketGateway({
   transports: ['websocket', 'polling'],
   cors: true,
+  redentials: true,
   // path: '/todo'
 })
 export class RoomGateway {

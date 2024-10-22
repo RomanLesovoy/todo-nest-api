@@ -1,4 +1,5 @@
 import { Controller, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiBadRequestResponse, ApiInternalServerErrorResponse, ApiBody } from '@nestjs/swagger';
 import { ColumnService } from '../services/column.service';
 import { CreateColumnDto } from '../dto/create-todo.dto';
 import { UpdateColumnDto } from '../dto/update-todo.dto';
@@ -8,6 +9,11 @@ export class ColumnController {
   constructor(private readonly columnService: ColumnService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create a new column' })
+  @ApiResponse({ status: 200, description: 'Column created successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid input data' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
+  @ApiBody({ type: CreateColumnDto })
   async create(@Body() createTodoDto: CreateColumnDto) {
     return new Promise((res, rej) => {
       this.columnService.createColumn$(createTodoDto).subscribe({
@@ -26,7 +32,12 @@ export class ColumnController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateColumnDto: UpdateColumnDto) {
+  @ApiOperation({ summary: 'Update a column' })
+  @ApiResponse({ status: 200, description: 'Column updated successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid input data' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
+  @ApiBody({ type: UpdateColumnDto })
+  async update(@Param('id') id: string, @Body() updateColumnDto: UpdateColumnDto) {
     return new Promise((res, rej) => {
       this.columnService.update(+id, updateColumnDto).subscribe({
         next: (col) => res({
@@ -44,7 +55,11 @@ export class ColumnController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  @ApiOperation({ summary: 'Delete a column' })
+  @ApiResponse({ status: 200, description: 'Column deleted successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid input data' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
+  async remove(@Param('id') id: string) {
     return new Promise((res, rej) => {
       this.columnService.remove(+id).subscribe({
         next: () => res({

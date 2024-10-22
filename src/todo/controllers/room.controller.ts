@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiBadRequestResponse, ApiInternalServerErrorResponse, ApiBody } from '@nestjs/swagger';
 import { RoomService } from '../services/room.service';
 import { CreateRoomDto } from '../dto/create-todo.dto';
 
@@ -6,6 +7,10 @@ import { CreateRoomDto } from '../dto/create-todo.dto';
 export class RoomController {
   constructor(private readonly roomService: RoomService) {}
 
+  @ApiOperation({ summary: 'Get a room by hash' })
+  @ApiResponse({ status: 200, description: 'Room found successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid input data' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
   @Get(':hash')
   async findbyRoom(@Param('hash') hash: string) {
     try {
@@ -23,6 +28,11 @@ export class RoomController {
     }
   }
 
+  @ApiOperation({ summary: 'Create a new room' })
+  @ApiResponse({ status: 200, description: 'Room created successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid input data' })
+  @ApiInternalServerErrorResponse({ description: 'Internal server error' })
+  @ApiBody({ type: CreateRoomDto })
   @Post()
   async create(@Body() createTodoDto: CreateRoomDto) {
     return new Promise((res, rej) => {

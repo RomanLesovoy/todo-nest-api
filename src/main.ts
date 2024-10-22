@@ -2,42 +2,41 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
-
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
   app.setGlobalPrefix('api/v1');
   
   const isDevelopment = process.env.NODE_ENV === 'development';
 
-  const whitelist = isDevelopment ? ['http://localhost:4200'] : ['https://tickets-board-v1.firebaseapp.com', 'http://tickets-board-v1.firebaseapp.com'];
+  const whitelist = isDevelopment ? ['http://localhost:4200'] : ['https://tickets-board-v1.firebaseapp.com'];
 
   app.enableCors({
     origin: function (origin, callback) {
-      if (whitelist.indexOf(origin) !== -1) {
+      if (!origin || whitelist.indexOf(origin) !== -1) {
         callback(null, true)
       } else {
         console.error("Blocked cors for:", origin)
         callback(new Error('Not allowed by CORS'))
       }
     },
-    allowedHeaders:"*",
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Content-Length', 'X-Custom-Header'],
+    credentials: true,
+    maxAge: 600,
   });
 
   const ioAdapter = new IoAdapter(app);
-
-  // const socketIoOptions = {
-  //   cors: true,
-  //   transports: ['websocket', 'polling'],
-  //   pingTimeout: 60000,
-  //   pingInterval: 25000,
-  //   cookie: false,
-  //   serveClient: false,
-  //   allowEIO3: true,
-  //   allowUpgrades: true,
-  //   httpCompression: true,
-  // };
-  // (app.getHttpAdapter().getInstance() as any).options = socketIoOptions;
   app.useWebSocketAdapter(ioAdapter);
+
+  const swaggerOptions = new DocumentBuilder()
+    .setTitle('Tickets Board API')
+    .setDescription('API for the Tickets Board application')
+    .setVersion('1.0')
+    .build(); 
+
+  const document = SwaggerModule.createDocument(app, swaggerOptions);
+  SwaggerModule.setup('api/v1/docs', app, document);
 
   app.useGlobalPipes(new ValidationPipe(
     {
